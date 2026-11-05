@@ -186,15 +186,25 @@ if database_url:
             }
         }
     else:
+        db_config = {
+            'ENGINE': engine,
+            'NAME': url.path[1:],
+            'USER': url.username or '',
+            'PASSWORD': url.password or '',
+            'HOST': url.hostname or '',
+            'PORT': url.port or '',
+            'CONN_MAX_AGE': 600,
+        }
+        # SSL Mode support for hosted Postgres (Render, Supabase, Neon, AWS RDS)
+        if url.query:
+            query_params = dict(param.split('=', 1) for param in url.query.split('&') if '=' in param)
+            if 'sslmode' in query_params:
+                db_config['OPTIONS'] = {'sslmode': query_params['sslmode']}
+        elif engine == 'django.db.backends.postgresql' and url.hostname not in ('localhost', '127.0.0.1'):
+            db_config['OPTIONS'] = {'sslmode': 'require'}
+
         DATABASES = {
-            'default': {
-                'ENGINE': engine,
-                'NAME': url.path[1:],
-                'USER': url.username or '',
-                'PASSWORD': url.password or '',
-                'HOST': url.hostname or '',
-                'PORT': url.port or '',
-            }
+            'default': db_config
         }
 else:
     DATABASES = {
