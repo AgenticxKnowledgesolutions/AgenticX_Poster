@@ -1,0 +1,630 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AgenticX — Student Placement Instagram 4:5 Poster Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Montserrat:wght@600;700;800;900&family=Poppins:wght@500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="{% static 'js/jspdf.umd.min.js' %}"></script>
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}?v=16">
+  <style>
+    /* Course optional toggle styling in sidebar */
+    .course-toggle-wrap {
+      background: #f0f7ff;
+      border: 1.5px solid #bae6fd;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin: 4px 0 2px 0;
+      transition: all 0.2s ease;
+    }
+    .course-toggle-wrap:hover {
+      background: #e0f2fe;
+      border-color: #7dd3fc;
+    }
+    .controls label.checkbox-row-label {
+      flex-direction: row !important;
+      align-items: center !important;
+      gap: 10px !important;
+      cursor: pointer;
+      margin: 0 !important;
+      user-select: none;
+      font: 700 11.5px 'Montserrat', sans-serif !important;
+      color: #0369a1 !important;
+    }
+    .controls label.checkbox-row-label input[type="checkbox"] {
+      width: 18px !important;
+      height: 18px !important;
+      min-width: 18px !important;
+      accent-color: #0284c7;
+      cursor: pointer;
+      margin: 0 !important;
+      padding: 0 !important;
+      display: inline-block !important;
+    }
+
+    /* Seamless 2-Column Info Panel when Course is unchecked */
+    .blue-info-panel.no-course {
+      grid-template-columns: 1.15fr 1.5px 1fr !important;
+      padding: 18px 45px !important;
+    }
+    .blue-info-panel.no-course #courseInfoBlock,
+    .blue-info-panel.no-course #courseDivider,
+    .blue-info-panel.no-course .info-block-course,
+    .blue-info-panel.no-course .ib-divider-course {
+      display: none !important;
+    }
+    .blue-info-panel.no-course .info-block {
+      padding: 0 16px;
+      gap: 18px;
+    }
+    .blue-info-panel.no-course .ib-icon {
+      width: 58px;
+      height: 58px;
+      font-size: 25px;
+    }
+    .blue-info-panel.no-course .ib-label {
+      font-size: 14px;
+      letter-spacing: 2px;
+    }
+    .blue-info-panel.no-course .ib-body strong {
+      font-size: 21px;
+      line-height: 1.3;
+    }
+
+    .badge-ratio {
+      background: #052b63;
+      color: #7dd3fc;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+      display: inline-block;
+      margin-left: 6px;
+    }
+    .sidebar-nav-bar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .btn-manage-link {
+      flex: 1;
+      background: #0284c7 !important;
+      color: #ffffff !important;
+      text-decoration: none;
+      font: 700 12px 'Poppins', sans-serif;
+      padding: 9px 12px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.2s;
+    }
+    .btn-manage-link:hover {
+      background: #0369a1 !important;
+    }
+    .btn-reset-form {
+      background: #16a34a;
+      color: #ffffff;
+      border: 0;
+      font: 700 12px 'Poppins', sans-serif;
+      padding: 9px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: background 0.2s;
+    }
+    .btn-reset-form:hover {
+      background: #15803d;
+    }
+    .editing-mode-banner {
+      background: #f0f9ff;
+      border: 1px solid #bae6fd;
+      color: #0369a1;
+      font: 600 11px 'Montserrat', sans-serif;
+      padding: 8px 12px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-save-db {
+      background: #16a34a !important;
+      color: #fff !important;
+    }
+    .btn-save-db:hover {
+      background: #15803d !important;
+    }
+    .btn-update-db {
+      background: #0284c7 !important;
+      color: #fff !important;
+    }
+    .btn-update-db:hover {
+      background: #0369a1 !important;
+    }
+    .btn-backend-download {
+      background: #475569 !important;
+      color: #fff !important;
+    }
+    .btn-backend-download:hover {
+      background: #334155 !important;
+    }
+    .btn-print-pdf {
+      background: #dc2626 !important;
+      color: #fff !important;
+    }
+    .btn-print-pdf:hover {
+      background: #b91c1c !important;
+    }
+    .btn-save-draft {
+      background: #f59e0b !important;
+      color: #ffffff !important;
+      box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+    }
+    .btn-save-draft:hover {
+      background: #d97706 !important;
+    }
+    .local-draft-alert {
+      background: #fefce8;
+      border: 1.5px solid #fde047;
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      color: #854d0e;
+      font-size: 11px;
+      margin: 4px 0 2px 0;
+      animation: fadeIn 0.3s ease;
+    }
+    .draft-alert-content {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .draft-alert-content i {
+      font-size: 18px;
+      color: #ca8a04;
+      flex-shrink: 0;
+    }
+    .draft-alert-content strong {
+      display: block;
+      font-size: 11.5px;
+      color: #713f12;
+    }
+    .draft-alert-content span {
+      display: block;
+      font-size: 10px;
+      color: #a16207;
+    }
+    .draft-alert-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-resume-draft {
+      flex: 1;
+      background: #ca8a04;
+      color: #fff;
+      border: 0;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font: 700 11px 'Poppins', sans-serif;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: background 0.2s;
+    }
+    .btn-resume-draft:hover {
+      background: #a16207;
+    }
+    .btn-dismiss-draft {
+      background: transparent;
+      border: 0;
+      color: #a16207;
+      font-size: 18px;
+      cursor: pointer;
+      padding: 0 4px;
+      line-height: 1;
+    }
+    .footer-web {
+      text-decoration: none !important;
+      transition: opacity 0.2s ease;
+    }
+    .footer-web:hover {
+      opacity: 0.85;
+    }
+    .footer-social-link {
+      text-decoration: none !important;
+      display: inline-flex;
+      transition: transform 0.2s ease;
+    }
+    .footer-social-link:hover {
+      transform: translateY(-2px);
+    }
+    .footer-social-link i {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #ffffff;
+      color: var(--blue-primary, #052b63);
+      display: grid;
+      place-items: center;
+      font-size: 17px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <!-- MOBILE TOP BAR: Brand + View Switcher (Visible only <= 860px) -->
+    <div class="mobile-top-bar" id="mobileTopBar">
+      <div class="mobile-brand-title">
+        <img src="{% static 'assets/agenticx_logo.png' %}" class="mobile-logo-img" alt="Logo">
+        <span><b>AgenticX</b> Studio</span>
+      </div>
+      <div class="mobile-tabs-pill">
+        <button type="button" class="mobile-tab-btn active" id="tabBtnEdit">
+          <i class="fa-solid fa-pen-to-square"></i> Edit
+        </button>
+        <button type="button" class="mobile-tab-btn" id="tabBtnPreview">
+          <i class="fa-solid fa-eye"></i> Poster <span class="badge-live-pulse"></span>
+        </button>
+      </div>
+      <a href="/manage/" class="mobile-manage-icon-btn" title="Manage Posters ({{ students.count }})">
+        <i class="fa-solid fa-folder-open"></i>
+      </a>
+    </div>
+
+    <!-- LEFT SIDEBAR: CONTROLS & EDIT FORM -->
+    <aside class="controls">
+      <div class="controls-head">
+        <b>AgenticX Placement Studio</b>
+        <span>DJANGO 4:5 POSTER GENERATOR</span>
+      </div>
+
+      <!-- Top Navigation & Action Bar -->
+      <div class="sidebar-nav-bar">
+        <a href="/manage/" class="btn-manage-link" title="Open Poster Management Dashboard">
+          <i class="fa-solid fa-folder-open"></i> Manage Posters ({{ students.count }})
+        </a>
+        <button type="button" id="resetNewFormBtn" class="btn-reset-form" title="Clear form to design a new poster">
+          <i class="fa-solid fa-plus"></i> New
+        </button>
+      </div>
+
+      <!-- Mode Status Banner -->
+      <div id="editingModeBanner" class="editing-mode-banner" {% if active_student and active_student.is_draft %}style="background: #fffbeb; border-color: #fde68a; color: #92400e;"{% endif %}>
+        {% if active_student %}
+          {% if active_student.is_draft %}
+            <i class="fa-solid fa-file-pen" style="color: #f59e0b;"></i> Continuing Draft: <b id="bannerStudentName">{{ active_student.name }}</b> <span style="background: #fef3c7; color: #b45309; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 700; margin-left: 4px;">DRAFT</span>
+          {% else %}
+            <i class="fa-solid fa-pen-to-square"></i> Editing: <b id="bannerStudentName">{{ active_student.name }}</b>
+          {% endif %}
+        {% else %}
+          <i class="fa-solid fa-sparkles"></i> Mode: <b id="bannerStudentName">Creating New Poster</b>
+        {% endif %}
+      </div>
+
+      <!-- Local Browser Draft Auto-recovery Banner -->
+      <div id="localDraftAlert" class="local-draft-alert" style="display: none;">
+        <div class="draft-alert-content">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <div>
+            <strong>Unsaved Draft Found</strong>
+            <span id="localDraftTimestamp">You have an in-progress draft from earlier.</span>
+          </div>
+        </div>
+        <div class="draft-alert-actions">
+          <button type="button" id="resumeDraftBtn" class="btn-resume-draft"><i class="fa-solid fa-arrow-rotate-right"></i> Continue Editing</button>
+          <button type="button" id="dismissDraftBtn" class="btn-dismiss-draft" title="Dismiss">&times;</button>
+        </div>
+      </div>
+
+      <label style="margin-top: 4px;">Poster Canvas Ratio (Locked)
+        <select id="canvasSize" disabled>
+          <option value="1350" selected>1080 × 1350 px (Instagram Portrait 4:5 Ratio)</option>
+        </select>
+      </label>
+
+      <div id="stackedControls">
+        <label>Highlight Backdrop Text
+          <input id="highlightText" value="{% if active_student %}{{ active_student.highlight_text }}{% else %}PLACED{% endif %}" placeholder="e.g. PLACED, HIRED, SELECTED, PPO">
+        </label>
+
+        <label>Blue & White Color Theme
+          <select id="colorTheme">
+            <option value="royal" selected>Royal Navy & White</option>
+          </select>
+        </label>
+      </div>
+
+      <!-- Hidden Active Loaded Student ID for Updates -->
+      <input type="hidden" id="activeStudentId" value="{% if active_student %}{{ active_student.id }}{% endif %}">
+      <input type="hidden" id="defaultStudentPhotoUrl" value="{% static 'assets/student_1.jpg' %}">
+      <input type="hidden" id="isActiveDraft" value="{% if active_student and active_student.is_draft %}true{% else %}false{% endif %}">
+      <input type="hidden" id="initialPhotoScale" value="{% if active_student and active_student.photo_scale %}{{ active_student.photo_scale }}{% else %}100{% endif %}">
+      <input type="hidden" id="initialPhotoPosX" value="{% if active_student and active_student.photo_pos_x %}{{ active_student.photo_pos_x }}{% else %}0{% endif %}">
+      <input type="hidden" id="initialPhotoPosY" value="{% if active_student and active_student.photo_pos_y %}{{ active_student.photo_pos_y }}{% else %}0{% endif %}">
+
+      <label>Student name<input id="name" value="{% if active_student %}{{ active_student.name }}{% else %}ANJANA K S{% endif %}"></label>
+      <label>Company<input id="company" value="{% if active_student %}{{ active_student.company }}{% else %}Big 6 Company{% endif %}"></label>
+      <label>Designation (Optional)<input id="designation" value="{% if active_student %}{{ active_student.designation }}{% else %}Data Analyst{% endif %}"></label>
+      <label>Qualification line 1<input id="qual1" value="{% if active_student %}{{ active_student.qual1 }}{% else %}B.Tech CS with AI & ML{% endif %}"></label>
+      <label>Qualification line 2<input id="qual2" value="{% if active_student %}{{ active_student.qual2 }}{% else %}(2026 Batch){% endif %}"></label>
+      <label>College line 1<input id="college1" value="{% if active_student %}{{ active_student.college1 }}{% else %}College of Engineering{% endif %}"></label>
+      <label>College line 2<input id="college2" value="{% if active_student %}{{ active_student.college2 }}{% else %}Attingal{% endif %}"></label>
+
+      <!-- Optional Course Toggle & Input -->
+      <div class="course-toggle-wrap">
+        <label class="checkbox-row-label">
+          <input type="checkbox" id="showCourse" onchange="toggleCourseVisibility()" onclick="toggleCourseVisibility()" {% if not active_student or active_student.training %}checked{% endif %}>
+          <span>Include Course / Training</span>
+        </label>
+      </div>
+      <div id="courseInputWrap" {% if active_student and not active_student.training %}style="display:none;"{% endif %}>
+        <label>Course / Training<input id="training" value="{% if active_student %}{{ active_student.training }}{% else %}Data Analytics{% endif %}" placeholder="e.g. Data Analytics"></label>
+      </div>
+
+      <label>Student photo<input id="photo" type="file" accept="image/*"></label>
+
+      <div class="photo-adjust-box">
+        <div class="photo-adjust-head"><i class="fa-solid fa-sliders"></i> Photo Size & Position Adjustment</div>
+        
+        <label>Zoom Level (<span id="photoScaleVal">100%</span>)
+          <input type="range" id="photoScale" min="60" max="250" value="100">
+        </label>
+        
+        <label>Vertical Position (<span id="photoPosYVal">0px</span>)
+          <input type="range" id="photoPosY" min="-250" max="250" value="0">
+        </label>
+
+        <label>Horizontal Position (<span id="photoPosXVal">0px</span>)
+          <input type="range" id="photoPosX" min="-250" max="250" value="0">
+        </label>
+
+        <button type="button" id="resetPhotoAdj" class="btn-reset-photo"><i class="fa-solid fa-rotate-left"></i> Reset Photo Position</button>
+        <div style="font-size: 10.5px; color: #0284c7; font-weight: 600; margin-top: 4px; display: flex; align-items: center; gap: 5px;">
+          <i class="fa-solid fa-hand-pointer"></i> Canva Mode: Drag or wheel-zoom the photo directly!
+        </div>
+      </div>
+
+      <div class="control-actions">
+        <button type="button" id="saveDraftBtn" class="btn-save-draft" title="Save progress now and continue editing later"><i class="fa-solid fa-file-pen"></i> Save as Draft (Continue Later)</button>
+        <button id="saveNewDbBtn" class="btn-save-db"><i class="fa-solid fa-user-plus"></i> Save as NEW Student Poster</button>
+        <button id="updateDbBtn" class="btn-update-db" {% if not active_student %}style="display:none;"{% endif %}><i class="fa-solid fa-floppy-disk"></i> Update Active Poster</button>
+        <button id="download"><i class="fa-solid fa-download"></i> Download 1080×1350 (4:5) PNG</button>
+        <button id="print" class="btn-print-pdf"><i class="fa-solid fa-file-pdf"></i> Download 4:5 Poster PDF</button>
+      </div>
+    </aside>
+
+    <!-- CENTER: POSTER STAGE CANVAS -->
+    <main class="stage">
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <button type="button" id="sidebarToggleBtn" class="btn-sidebar-toggle" title="Collapse / Expand Sidebar Controls">
+            <i class="fa-solid fa-bars-staggered"></i> <span class="sidebar-toggle-text">Panel</span>
+          </button>
+          <span id="canvasLabel"><b>1080 × 1350 px</b> · Instagram 4:5 <span class="badge-ratio">4:5 ONLY</span></span>
+        </div>
+        <div class="toolbar-right">
+          <button id="minus" title="Zoom out">−</button><span id="zoom">50%</span><button id="plus" title="Zoom in">+</button><button id="fitBtn" class="btn-fit" title="Fit to Screen"><i class="fa-solid fa-expand"></i> Fit</button>
+        </div>
+      </div>
+
+      <div class="viewport">
+        <div class="poster-container" id="posterContainer">
+        <div id="poster" class="poster style-stacked theme-royal size-1350">
+
+          <!-- Clean Background Accents -->
+          <div class="bg-blue-glow-1"></div>
+          <div class="bg-blue-glow-2"></div>
+
+          <!-- ================= AGENTICX BLUE & WHITE PLACEMENT POSTER ================= -->
+          <div class="poster-stacked-layout">
+            <!-- Header Bar -->
+            <header class="blue-header">
+              <div class="blue-brand">
+                <div class="blue-logo-wrap">
+                  <img src="{% static 'assets/agenticx_logo.png' %}" class="blue-logo-img" alt="AgenticX Logo">
+                </div>
+                <div class="blue-brand-copy">
+                  <div class="brand-title">AgenticX</div>
+                  <div class="brand-sub">Knowledge Solutions</div>
+                </div>
+              </div>
+              <div class="blue-header-badge">
+                <i class="fa-solid fa-trophy"></i> PLACEMENT ALERT
+              </div>
+            </header>
+
+            <!-- Standard Readable Stacked "PLACED" Typography Backdrop -->
+            <div class="placed-typography-stack" id="placedTypographyStack">
+              <div class="placed-row r-2">{% if active_student %}{{ active_student.highlight_text }}{% else %}PLACED{% endif %}</div>
+              <div class="placed-row r-3">{% if active_student %}{{ active_student.highlight_text }}{% else %}PLACED{% endif %}</div>
+              <div class="placed-row r-4">{% if active_student %}{{ active_student.highlight_text }}{% else %}PLACED{% endif %}</div>
+              <div class="placed-row r-5">{% if active_student %}{{ active_student.highlight_text }}{% else %}PLACED{% endif %}</div>
+            </div>
+
+            <!-- Student Hero & Name Card -->
+            <div class="stacked-hero-section">
+              <div class="stacked-photo-frame" id="stackedPhotoFrame" title="Canva Mode: Click and drag to position photo, scroll to zoom">
+                <img id="stackedStudentPhoto" src="{% if active_student %}{{ active_student.get_photo_url }}{% else %}{% static 'assets/student_1.jpg' %}{% endif %}" data-default-src="{% static 'assets/student_1.jpg' %}" alt="Student Photo">
+                
+                <!-- Canva-style Visual Crop Grid Overlay -->
+                <div class="canva-crop-grid" id="canvaCropGrid">
+                  <div class="crop-grid-line line-v1"></div>
+                  <div class="crop-grid-line line-v2"></div>
+                  <div class="crop-grid-line line-h1"></div>
+                  <div class="crop-grid-line line-h2"></div>
+                  <div class="crop-corner corner-tl"></div>
+                  <div class="crop-corner corner-tr"></div>
+                  <div class="crop-corner corner-bl"></div>
+                  <div class="crop-corner corner-br"></div>
+                </div>
+
+                <!-- Canva-style Floating Position & Size Toolbar -->
+                <div class="canva-photo-toolbar" id="canvaPhotoToolbar">
+                  <div class="canva-tb-drag-hint">
+                    <i class="fa-solid fa-arrows-up-down-left-right"></i> Drag to Position
+                  </div>
+                  <div class="canva-tb-divider"></div>
+                  <div class="canva-tb-zoom">
+                    <button type="button" id="canvaZoomMinus" title="Zoom Out Photo"><i class="fa-solid fa-minus"></i></button>
+                    <input type="range" id="canvaPhotoScale" min="60" max="250" value="100" title="Adjust Photo Size">
+                    <button type="button" id="canvaZoomPlus" title="Zoom In Photo"><i class="fa-solid fa-plus"></i></button>
+                    <span id="canvaScaleVal">100%</span>
+                  </div>
+                  <div class="canva-tb-divider"></div>
+                  <div class="canva-tb-actions">
+                    <button type="button" id="canvaAlignTop" class="canva-btn-action" title="Focus Face / Top"><i class="fa-solid fa-arrow-up"></i> Top</button>
+                    <button type="button" id="canvaAlignCenter" class="canva-btn-action" title="Center Photo"><i class="fa-solid fa-crosshairs"></i> Center</button>
+                    <button type="button" id="canvaReset" class="canva-btn-action" title="Reset Position & Scale"><i class="fa-solid fa-rotate-left"></i> Reset</button>
+                  </div>
+                </div>
+
+                <!-- Canva bottom hint badge -->
+                <div class="canva-drag-indicator">
+                  <i class="fa-solid fa-crop-simple"></i> Drag photo
+                </div>
+              </div>
+
+              <!-- Student Name & Role Card -->
+              <div class="blue-name-card">
+                <div class="stacked-card-name" id="stackedStudentName">{% if active_student %}{{ active_student.name }}{% else %}ANJANA K S{% endif %}</div>
+                <div class="placed-subhead"><i class="fa-solid fa-circle-check"></i> SUCCESSFULLY PLACED AT</div>
+
+                <div class="student-role-badges">
+                  <span class="badge-company" id="stackedStudentCompany"><i class="fa-solid fa-building"></i> {% if active_student %}{{ active_student.company }}{% else %}Big 6 Company{% endif %}</span>
+                  <span class="badge-role" id="stackedStudentDesignation"><i class="fa-solid fa-briefcase"></i> {% if active_student %}{{ active_student.designation }}{% else %}Data Analyst{% endif %}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Detailed Info Panel: Course, Qualification, College -->
+            <section class="blue-info-panel{% if active_student and not active_student.training %} no-course{% endif %}" id="blueInfoPanel">
+              <div class="info-block info-block-course" id="courseInfoBlock">
+                <div class="ib-icon"><i class="fa-solid fa-laptop-code"></i></div>
+                <div class="ib-body">
+                  <span class="ib-label">COURSE</span>
+                  <strong id="stackedTraining">{% if active_student %}{{ active_student.training }}{% else %}Data Analytics{% endif %}</strong>
+                </div>
+              </div>
+
+              <div class="ib-divider ib-divider-course" id="courseDivider"></div>
+
+              <div class="info-block info-block-qual" id="qualInfoBlock">
+                <div class="ib-icon"><i class="fa-solid fa-user-graduate"></i></div>
+                <div class="ib-body">
+                  <span class="ib-label">QUALIFICATION</span>
+                  <strong id="stackedQual">{% if active_student %}{{ active_student.qual1 }} {{ active_student.qual2 }}{% else %}B.Tech CS with AI & ML (2026 Batch){% endif %}</strong>
+                </div>
+              </div>
+
+              <div class="ib-divider" id="qualDivider"></div>
+
+              <div class="info-block info-block-college" id="collegeInfoBlock">
+                <div class="ib-icon"><i class="fa-solid fa-building-columns"></i></div>
+                <div class="ib-body">
+                  <span class="ib-label">COLLEGE</span>
+                  <strong id="stackedCollege">{% if active_student %}{{ active_student.college1 }}, {{ active_student.college2 }}{% else %}College of Engineering, Attingal{% endif %}</strong>
+                </div>
+              </div>
+            </section>
+
+            <!-- Blue & White Footer Bar with Clickable Links -->
+            <footer class="blue-footer" id="posterFooter">
+              <a href="https://www.agenticx.co.in/" target="_blank" rel="noopener noreferrer" class="footer-web" id="footerWebLink" title="Visit AgenticX Website">
+                <i class="fa-solid fa-globe"></i> agenticx.co.in
+              </a>
+              <div class="footer-pipe">|</div>
+              <div class="footer-phone" id="footerPhone">
+                <i class="fa-solid fa-phone"></i> +91 9496552094 &nbsp;|&nbsp; +91 9496852094
+              </div>
+              <div class="footer-socials" id="footerSocials">
+                <a href="https://www.linkedin.com/company/agenticx-knowledge-solutions/" target="_blank" rel="noopener noreferrer" class="footer-social-link" id="footerLinkedinLink" title="LinkedIn Profile">
+                  <i class="fa-brands fa-linkedin-in"></i>
+                </a>
+                <a href="https://www.instagram.com/agenticxknowledgesolutions" target="_blank" rel="noopener noreferrer" class="footer-social-link" id="footerInstagramLink" title="Instagram Profile">
+                  <i class="fa-brands fa-instagram"></i>
+                </a>
+              </div>
+            </footer>
+          </div>
+
+        </div>
+        </div>
+      </div>
+
+      <!-- Floating Action Bar for Mobile Poster View -->
+      <div class="mobile-stage-actions" id="mobileStageActions">
+        <button type="button" id="mobileQuickDraftBtn" class="btn-mobile-act btn-mobile-draft" title="Save Draft">
+          <i class="fa-solid fa-file-pen"></i> Draft
+        </button>
+        <button type="button" id="mobileQuickPngBtn" class="btn-mobile-act btn-mobile-png" title="Download PNG">
+          <i class="fa-solid fa-download"></i> PNG
+        </button>
+        <button type="button" id="mobileQuickPdfBtn" class="btn-mobile-act btn-mobile-pdf" title="Download PDF">
+          <i class="fa-solid fa-file-pdf"></i> PDF
+        </button>
+        <button type="button" id="mobileQuickEditBtn" class="btn-mobile-act btn-mobile-edit" title="Back to Edit Form">
+          <i class="fa-solid fa-sliders"></i> Edit
+        </button>
+      </div>
+    </main>
+  </div>
+  <script src="{% static 'js/app.js' %}?v=16"></script>
+  <script>
+    function toggleCourseVisibility() {
+      const showCourseCheckbox = document.getElementById("showCourse");
+      const isChecked = showCourseCheckbox ? showCourseCheckbox.checked : false;
+      const courseInputWrap = document.getElementById("courseInputWrap");
+      const courseBlock = document.getElementById("courseInfoBlock");
+      const courseDivider = document.getElementById("courseDivider");
+      const blueInfoPanel = document.getElementById("blueInfoPanel");
+
+      if (courseInputWrap) {
+        courseInputWrap.style.display = isChecked ? "block" : "none";
+      }
+
+      if (courseBlock) {
+        courseBlock.style.display = isChecked ? "flex" : "none";
+      }
+
+      if (courseDivider) {
+        courseDivider.style.display = isChecked ? "block" : "none";
+      }
+
+      if (blueInfoPanel) {
+        if (isChecked) {
+          blueInfoPanel.classList.remove("no-course");
+          blueInfoPanel.style.gridTemplateColumns = "1.15fr 1.5px 1.15fr 1.5px 1fr";
+          blueInfoPanel.style.padding = "16px 24px";
+        } else {
+          blueInfoPanel.classList.add("no-course");
+          blueInfoPanel.style.gridTemplateColumns = "1.15fr 1.5px 1fr";
+          blueInfoPanel.style.padding = "18px 45px";
+        }
+      }
+    }
+    // Run on startup
+    toggleCourseVisibility();
+  </script>
+</body>
+
+</html>
