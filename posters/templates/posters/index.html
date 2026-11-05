@@ -464,7 +464,7 @@
             <!-- Student Hero & Name Card -->
             <div class="stacked-hero-section">
               <div class="stacked-photo-frame" id="stackedPhotoFrame" title="Canva Mode: Click and drag to position photo, scroll to zoom">
-                <img id="stackedStudentPhoto" src="{% if active_student %}{{ active_student.get_photo_url }}{% else %}{% static 'assets/student_1.jpg' %}{% endif %}" data-default-src="{% static 'assets/student_1.jpg' %}" alt="Student Photo">
+                <img id="stackedStudentPhoto" src="{% if active_student %}{{ active_student.get_photo_url }}{% else %}{% static 'assets/student_1.jpg' %}{% endif %}" data-default-src="{% static 'assets/student_1.jpg' %}" crossorigin="anonymous" alt="Student Photo">
                 
                 <!-- Canva-style Visual Crop Grid Overlay -->
                 <div class="canva-crop-grid" id="canvaCropGrid">

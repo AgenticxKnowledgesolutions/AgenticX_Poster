@@ -127,6 +127,20 @@ INSTALLED_APPS = [
     'posters.apps.PostersConfig',
 ]
 
+# Cloudinary cloud media storage (activated when CLOUDINARY_URL is present)
+cloudinary_url = os.environ.get('CLOUDINARY_URL')
+if cloudinary_url:
+    try:
+        import cloudinary
+        import cloudinary_storage
+        INSTALLED_APPS.insert(0, 'cloudinary_storage')
+        INSTALLED_APPS.append('cloudinary')
+        CLOUDINARY_STORAGE = {
+            'CLOUDINARY_URL': cloudinary_url,
+        }
+    except ImportError:
+        pass
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -253,18 +267,28 @@ STATICFILES_DIRS = [
 # STATIC_ROOT: Where collectstatic copies files for production serving
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
-# WhiteNoise storage optimization if available
-if 'whitenoise.middleware.WhiteNoiseMiddleware' in MIDDLEWARE:
-    STORAGES = {
-        "default": {
-            "BACKEND": "django.core.files.storage.FileSystemStorage",
-        },
-        "staticfiles": {
-            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
-        },
-    }
-    # Do not crash the build if optional asset source maps are omitted
-    WHITENOISE_MANIFEST_STRICT = False
+# Static and media asset storage configuration
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage" if 'whitenoise.middleware.WhiteNoiseMiddleware' in MIDDLEWARE else "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+# Do not crash the build if optional asset source maps are omitted
+WHITENOISE_MANIFEST_STRICT = False
+
+# Activate Cloudinary for media uploads when CLOUDINARY_URL is configured
+if os.environ.get('CLOUDINARY_URL'):
+    try:
+        import cloudinary
+        import cloudinary_storage
+        STORAGES["default"] = {
+            "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
+        }
+    except ImportError:
+        pass
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
