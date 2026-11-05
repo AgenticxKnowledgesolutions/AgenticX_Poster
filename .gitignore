@@ -26,9 +26,10 @@ venv.bak/
 
 # Static & Media Assets
 staticfiles/
-media/
 media/*
 !media/.gitkeep
+!media/students/
+!media/students/**
 
 # IDEs & OS Files
 .vscode/
