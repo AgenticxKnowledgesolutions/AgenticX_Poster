@@ -70,23 +70,48 @@ elif not DEBUG and SECRET_KEY.startswith('django-insecure-'):
 # -----------------------------------------------------------------------------
 # 3. ALLOWED_HOSTS & CSRF TRUSTED ORIGINS
 # -----------------------------------------------------------------------------
-# Provide a comma-separated list of domain names (e.g. "mywebsite.com,www.mywebsite.com,127.0.0.1")
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    '[::1]',
+    'agenticx-poster.onrender.com',
+    '.onrender.com',
+]
+
 allowed_hosts_str = os.environ.get('ALLOWED_HOSTS', '')
 if allowed_hosts_str:
-    ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_str.split(',') if h.strip()]
-elif DEBUG:
-    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '[::1]']
-else:
-    ALLOWED_HOSTS = []
+    if allowed_hosts_str.strip() == '*':
+        ALLOWED_HOSTS = ['*']
+    else:
+        for h in allowed_hosts_str.split(','):
+            h = h.strip()
+            if h and h not in ALLOWED_HOSTS:
+                ALLOWED_HOSTS.append(h)
 
-# CSRF Trusted Origins for HTTPS form submissions & AJAX (e.g. "https://mywebsite.com,http://localhost:8000")
+# Render provides RENDER_EXTERNAL_HOSTNAME automatically
+render_external_hostname = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if render_external_hostname and render_external_hostname not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(render_external_hostname)
+
+# CSRF Trusted Origins for HTTPS form submissions & AJAX
+CSRF_TRUSTED_ORIGINS = [
+    'http://localhost:8000',
+    'http://127.0.0.1:8000',
+    'https://agenticx-poster.onrender.com',
+    'https://*.onrender.com',
+]
+
 csrf_trusted_str = os.environ.get('CSRF_TRUSTED_ORIGINS', '')
 if csrf_trusted_str:
-    CSRF_TRUSTED_ORIGINS = [o.strip() for o in csrf_trusted_str.split(',') if o.strip()]
-elif DEBUG:
-    CSRF_TRUSTED_ORIGINS = ['http://localhost:8000', 'http://127.0.0.1:8000']
-else:
-    CSRF_TRUSTED_ORIGINS = []
+    for o in csrf_trusted_str.split(','):
+        o = o.strip()
+        if o and o not in CSRF_TRUSTED_ORIGINS:
+            CSRF_TRUSTED_ORIGINS.append(o)
+
+if render_external_hostname:
+    render_origin = f'https://{render_external_hostname}'
+    if render_origin not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(render_origin)
 
 
 # -----------------------------------------------------------------------------
