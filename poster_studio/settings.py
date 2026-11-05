@@ -228,6 +228,8 @@ if 'whitenoise.middleware.WhiteNoiseMiddleware' in MIDDLEWARE:
             "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
+    # Do not crash the build if optional asset source maps are omitted
+    WHITENOISE_MANIFEST_STRICT = False
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
